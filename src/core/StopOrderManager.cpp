@@ -4,6 +4,7 @@
 
 namespace MatchingEngine {
 
+// Add a stop order to the manager
 void StopOrderManager::addStopOrder(OrderPtr order) {
     if (!order || !order->isStopOrder()) {
         std::cerr << "Error: Attempted to add non-stop order to StopOrderManager" << std::endl;
@@ -20,6 +21,7 @@ void StopOrderManager::addStopOrder(OrderPtr order) {
               << " with stop price " << order->stop_price << std::endl;
 }
 
+// Check and trigger stop orders
 std::vector<OrderPtr> StopOrderManager::checkTriggers(const Symbol& symbol, Price last_trade_price) {
     std::lock_guard<std::mutex> lock(mutex_);
     
@@ -67,6 +69,7 @@ std::vector<OrderPtr> StopOrderManager::checkTriggers(const Symbol& symbol, Pric
     return triggered;
 }
 
+// Cancel a stop order
 bool StopOrderManager::cancelStopOrder(const OrderId& order_id) {
     std::lock_guard<std::mutex> lock(mutex_);
     
@@ -89,6 +92,7 @@ bool StopOrderManager::cancelStopOrder(const OrderId& order_id) {
     return false;
 }
 
+// Get all stop orders for a symbol
 std::vector<OrderPtr> StopOrderManager::getStopOrders(const Symbol& symbol) const {
     std::lock_guard<std::mutex> lock(mutex_);
     
@@ -100,6 +104,7 @@ std::vector<OrderPtr> StopOrderManager::getStopOrders(const Symbol& symbol) cons
     return {};
 }
 
+// Get the total count of stop orders
 size_t StopOrderManager::getStopOrderCount() const {
     std::lock_guard<std::mutex> lock(mutex_);
     

@@ -5,6 +5,8 @@
 
 namespace MatchingEngine {
 
+// Trade implementation (minimal, essential comments only)
+
 std::string Trade::toJson() const {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(8);

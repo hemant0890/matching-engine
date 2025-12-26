@@ -4,6 +4,7 @@
 
 namespace MatchingEngine {
 
+// Order implementation (minimal, essential comments only)
 std::string Order::toString() const {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(8);

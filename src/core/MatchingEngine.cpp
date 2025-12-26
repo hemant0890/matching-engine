@@ -6,6 +6,7 @@
 
 namespace MatchingEngine {
 
+// MatchingEngineCore implementation (minimal, essential comments only)
 MatchingEngineCore::MatchingEngineCore()
     : total_orders_processed_(0), total_trades_executed_(0), order_id_counter_(0) {}
 

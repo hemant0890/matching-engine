@@ -6,6 +6,8 @@
 
 namespace MatchingEngine {
 
+// OrderBook implementation (minimal, essential comments only)
+
 OrderBook::OrderBook(const Symbol& symbol)
     : symbol_(symbol), sequence_counter_(0), trade_id_counter_(0) {}
 
