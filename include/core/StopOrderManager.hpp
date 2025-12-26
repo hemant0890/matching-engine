@@ -23,7 +23,7 @@ public:
 
 private:
     std::map<Symbol, std::vector<OrderPtr>> stop_orders_; // Stop orders by symbol
-    mutable std::mutex mutex_; // Thread safety
+    mutable std::mutex mutex_; 
 };
 
 } // namespace MatchingEngine
