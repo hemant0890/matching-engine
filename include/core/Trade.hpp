@@ -4,11 +4,9 @@
 #include <string>
 #include <chrono>
 
+// Executed trade representation
 namespace MatchingEngine {
 
-/**
- * @brief Represents an executed trade
- */
 class Trade {
 public:
     std::string trade_id;
@@ -20,11 +18,10 @@ public:
     std::string aggressor_side;  // "buy" or "sell"
     Timestamp timestamp;
     
-    // Fee information
     double maker_fee;           // Fee charged to maker
     double taker_fee;           // Fee charged to taker
-    double maker_fee_rate;      // Maker fee rate (e.g., 0.001 = 0.1%)
-    double taker_fee_rate;      // Taker fee rate (e.g., 0.002 = 0.2%)
+    double maker_fee_rate;      // Maker fee rate
+    double taker_fee_rate;      // Taker fee rate
     
     Trade() : timestamp(getCurrentTimestamp()), 
               maker_fee(0.0), taker_fee(0.0), 

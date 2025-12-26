@@ -1,5 +1,7 @@
 #pragma once
 
+// Order book for a trading symbol
+
 #include "Order.hpp"
 #include "Trade.hpp"
 #include "PriceLevel.hpp"
@@ -61,4 +63,4 @@ private:
     std::string generateTradeId();
 };
 
-} // namespace MatchingEngine
+} 

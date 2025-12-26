@@ -11,26 +11,20 @@
 #include <atomic>
 #include <functional>
 
+// Main matching engine logic
 namespace MatchingEngine {
 
-/**
- * @brief Main matching engine
- * Handles order validation, routing, and lifecycle management
- */
 class MatchingEngineCore {
 public:
     MatchingEngineCore();
     
-    // Core operations
     std::string submitOrder(OrderPtr order);
     bool cancelOrder(const OrderId& order_id);
     OrderPtr getOrder(const OrderId& order_id) const;
     
-    // Market data
     std::shared_ptr<OrderBook> getOrderBook(const Symbol& symbol) const;
     std::pair<std::optional<Price>, std::optional<Price>> getBBO(const Symbol& symbol) const;
     
-    // Callbacks
     void setTradeCallback(std::function<void(const Trade&)> callback) {
         trade_callback_ = callback;
     }
@@ -39,32 +33,25 @@ public:
         book_update_callback_ = callback;
     }
     
-    // Statistics
     uint64_t getTotalOrdersProcessed() const { return total_orders_processed_; }
     uint64_t getTotalTradesExecuted() const { return total_trades_executed_; }
 
 private:
-    // Order books per symbol
     std::unordered_map<Symbol, std::shared_ptr<OrderBook>> order_books_;
     mutable std::mutex order_books_mutex_;
     
-    // Stop order manager
     StopOrderManager stop_order_manager_;
     
-    // Order tracking
     std::unordered_map<OrderId, OrderPtr> all_orders_;
     mutable std::mutex orders_mutex_;
     
-    // Callbacks
     std::function<void(const Trade&)> trade_callback_;
     std::function<void(const Symbol&)> book_update_callback_;
     
-    // Statistics
     std::atomic<uint64_t> total_orders_processed_;
     std::atomic<uint64_t> total_trades_executed_;
     std::atomic<uint64_t> order_id_counter_;
     
-    // Helper methods
     bool validateOrder(const OrderPtr& order, std::string& error) const;
     void processOrder(OrderPtr order);
     std::shared_ptr<OrderBook> getOrCreateOrderBook(const Symbol& symbol);
@@ -78,4 +65,4 @@ private:
     void checkAndTriggerStopOrders(const Symbol& symbol, Price last_trade_price);
 };
 
-} // namespace MatchingEngine
+} 

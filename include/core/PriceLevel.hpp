@@ -6,10 +6,7 @@
 
 namespace MatchingEngine {
 
-/**
- * @brief Represents all orders at a specific price level
- * Uses deque for FIFO time priority
- */
+// Minimal: Price level (FIFO queue of orders at a price)
 class PriceLevel {
 public:
     Price price;

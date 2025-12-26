@@ -1,3 +1,4 @@
+// Minimal: Core types and enums for matching engine
 #pragma once
 
 #include <string>
@@ -6,36 +7,30 @@
 
 namespace MatchingEngine {
 
-// Core order types (as per assignment requirements)
 enum class OrderType {
-    MARKET,      // Execute immediately at best available price
-    LIMIT,       // Execute at specified price or better
-    IOC,         // Immediate-Or-Cancel
-    FOK,         // Fill-Or-Kill
-    
-    // Advanced order types (BONUS)
-    STOP_LOSS,   // Triggers market order when price hits stop price
-    STOP_LIMIT,  // Triggers limit order when price hits stop price
-    TAKE_PROFIT  // Like stop-loss but for taking profits
+    MARKET,
+    LIMIT,
+    IOC,
+    FOK,
+    STOP_LOSS,
+    STOP_LIMIT,
+    TAKE_PROFIT
 };
 
-// Order side
 enum class OrderSide {
     BUY,
     SELL
 };
 
-// Order status
 enum class OrderStatus {
-    PENDING,       // Just received, awaiting processing
-    ACTIVE,        // Resting on the order book
-    PARTIAL_FILL,  // Partially executed
-    FILLED,        // Completely executed
-    CANCELLED,     // User cancelled or IOC/FOK cancelled
-    REJECTED       // Failed validation
+    PENDING,
+    ACTIVE,
+    PARTIAL_FILL,
+    FILLED,
+    CANCELLED,
+    REJECTED
 };
 
-// Utility functions
 inline std::string orderTypeToString(OrderType type) {
     switch (type) {
         case OrderType::MARKET: return "MARKET";
@@ -80,14 +75,12 @@ inline OrderSide stringToOrderSide(const std::string& str) {
     return (str == "buy") ? OrderSide::BUY : OrderSide::SELL;
 }
 
-// Type aliases
 using OrderId = std::string;
 using Symbol = std::string;
 using Price = double;
 using Quantity = double;
 using Timestamp = uint64_t;
 
-// Configuration constants
 namespace Config {
     constexpr int MAX_PRICE_DECIMALS = 2;
     constexpr int MAX_QUANTITY_DECIMALS = 8;
