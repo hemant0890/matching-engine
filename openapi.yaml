@@ -1,0 +1,405 @@
+openapi: 3.0.3
+info:
+  title: Matching Engine API
+  description: |
+    REG NMS-compliant cryptocurrency matching engine with REST API.
+    
+    ## Features
+    - Price-time priority matching
+    - No trade-throughs (REG NMS compliant)
+    - Multiple order types (Market, Limit, IOC, FOK)
+    - Real-time WebSocket feeds
+    
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Orders
+    description: Order management endpoints
+  - name: Market Data
+    description: Market data and order book queries
+
+paths:
+  /api/v1/orders:
+    post:
+      tags:
+        - Orders
+      summary: Submit a new order
+      description: |
+        Submit a new trading order to the matching engine.
+        
+        ## Order Types
+        - **market**: Execute immediately at best available price
+        - **limit**: Execute at specified price or better
+        - **ioc**: Immediate-Or-Cancel (fill what's possible, cancel rest)
+        - **fok**: Fill-Or-Kill (fill completely or cancel)
+        
+        ## Behavior
+        - Orders are matched using price-time priority
+        - Matched orders generate trades immediately
+        - Unmatched portions may rest on the book (except IOC/FOK)
+        
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+            examples:
+              limitBuy:
+                summary: Limit Buy Order
+                value:
+                  symbol: "BTC-USDT"
+                  order_type: "limit"
+                  side: "buy"
+                  quantity: 1.5
+                  price: 50000.0
+              marketSell:
+                summary: Market Sell Order
+                value:
+                  symbol: "BTC-USDT"
+                  order_type: "market"
+                  side: "sell"
+                  quantity: 0.5
+                  price: 0
+              iocOrder:
+                summary: IOC Order
+                value:
+                  symbol: "BTC-USDT"
+                  order_type: "ioc"
+                  side: "buy"
+                  quantity: 2.0
+                  price: 50100.0
+              fokOrder:
+                summary: FOK Order
+                value:
+                  symbol: "ETH-USDT"
+                  order_type: "fok"
+                  side: "sell"
+                  quantity: 10.0
+                  price: 3000.0
+      
+      responses:
+        '200':
+          description: Order accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+              examples:
+                accepted:
+                  summary: Order Accepted
+                  value:
+                    success: true
+                    order_id: "ORD000000000001"
+                    message: "Order accepted"
+                    status: "ACTIVE"
+                filled:
+                  summary: Order Filled
+                  value:
+                    success: true
+                    order_id: "ORD000000000002"
+                    message: "Order accepted"
+                    status: "FILLED"
+                rejected:
+                  summary: Order Rejected
+                  value:
+                    success: false
+                    order_id: ""
+                    message: "Order rejected"
+                    status: "REJECTED"
+
+  /api/v1/orders/{orderId}:
+    get:
+      tags:
+        - Orders
+      summary: Get order status
+      description: Query the current status of an order by its ID
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: The unique order identifier
+          schema:
+            type: string
+          example: "ORD000000000001"
+      
+      responses:
+        '200':
+          description: Order found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderStatus'
+              example:
+                order_id: "ORD000000000001"
+                symbol: "BTC-USDT"
+                type: "LIMIT"
+                side: "BUY"
+                price: 50000.0
+                quantity: 1.5
+                filled_quantity: 0.8
+                status: "PARTIAL_FILL"
+        
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "not_found"
+                message: "Order not found"
+    
+    delete:
+      tags:
+        - Orders
+      summary: Cancel an order
+      description: |
+        Cancel an active or partially filled order.
+        
+        **Note:** Fully filled orders cannot be cancelled.
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: The unique order identifier to cancel
+          schema:
+            type: string
+          example: "ORD000000000001"
+      
+      responses:
+        '200':
+          description: Cancellation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+              examples:
+                success:
+                  summary: Successfully Cancelled
+                  value:
+                    success: true
+                    order_id: "ORD000000000001"
+                    message: "Order cancelled"
+                    status: "CANCELLED"
+                failed:
+                  summary: Cannot Cancel
+                  value:
+                    success: false
+                    order_id: "ORD000000000001"
+                    message: "Order not found or already filled"
+                    status: "UNKNOWN"
+
+  /api/v1/orderbook/{symbol}:
+    get:
+      tags:
+        - Market Data
+      summary: Get order book snapshot
+      description: |
+        Retrieve the current L2 order book for a symbol.
+        
+        Returns up to 10 price levels on each side (bids and asks).
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          description: Trading pair symbol
+          schema:
+            type: string
+          example: "BTC-USDT"
+      
+      responses:
+        '200':
+          description: Order book snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderBookSnapshot'
+              example:
+                timestamp: "2024-12-23T19:50:00.123456789Z"
+                symbol: "BTC-USDT"
+                bids:
+                  - ["50000.00", "2.50000000"]
+                  - ["49900.00", "1.50000000"]
+                  - ["49800.00", "3.00000000"]
+                asks:
+                  - ["50100.00", "1.80000000"]
+                  - ["50200.00", "0.50000000"]
+                  - ["50300.00", "2.20000000"]
+        
+        '404':
+          description: Symbol not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "not_found"
+                message: "Symbol not found"
+
+components:
+  schemas:
+    OrderRequest:
+      type: object
+      required:
+        - symbol
+        - order_type
+        - side
+        - quantity
+        - price
+      properties:
+        symbol:
+          type: string
+          description: Trading pair symbol
+          example: "BTC-USDT"
+        order_type:
+          type: string
+          enum: [market, limit, ioc, fok]
+          description: Type of order
+          example: "limit"
+        side:
+          type: string
+          enum: [buy, sell]
+          description: Order side
+          example: "buy"
+        quantity:
+          type: number
+          format: double
+          minimum: 0.00000001
+          description: Order quantity
+          example: 1.5
+        price:
+          type: number
+          format: double
+          minimum: 0
+          description: Order price (0 for market orders)
+          example: 50000.0
+        client_order_id:
+          type: string
+          description: Optional client-provided order ID
+          example: "CLIENT123"
+    
+    OrderResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether the operation succeeded
+        order_id:
+          type: string
+          description: Unique order identifier
+          example: "ORD000000000001"
+        message:
+          type: string
+          description: Human-readable message
+          example: "Order accepted"
+        status:
+          type: string
+          enum: [PENDING, ACTIVE, PARTIAL_FILL, FILLED, CANCELLED, REJECTED]
+          description: Current order status
+    
+    OrderStatus:
+      type: object
+      properties:
+        order_id:
+          type: string
+          description: Unique order identifier
+          example: "ORD000000000001"
+        symbol:
+          type: string
+          description: Trading pair
+          example: "BTC-USDT"
+        type:
+          type: string
+          enum: [MARKET, LIMIT, IOC, FOK]
+          description: Order type
+        side:
+          type: string
+          enum: [BUY, SELL]
+          description: Order side
+        price:
+          type: number
+          format: double
+          description: Order price
+          example: 50000.0
+        quantity:
+          type: number
+          format: double
+          description: Total order quantity
+          example: 1.5
+        filled_quantity:
+          type: number
+          format: double
+          description: Quantity already filled
+          example: 0.8
+        status:
+          type: string
+          enum: [PENDING, ACTIVE, PARTIAL_FILL, FILLED, CANCELLED, REJECTED]
+          description: Current order status
+    
+    OrderBookSnapshot:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Snapshot timestamp in ISO 8601 format
+          example: "2024-12-23T19:50:00.123456789Z"
+        symbol:
+          type: string
+          description: Trading pair symbol
+          example: "BTC-USDT"
+        bids:
+          type: array
+          description: Buy orders (price, quantity pairs)
+          items:
+            type: array
+            items:
+              type: string
+            minItems: 2
+            maxItems: 2
+          example:
+            - ["50000.00", "2.50000000"]
+            - ["49900.00", "1.50000000"]
+        asks:
+          type: array
+          description: Sell orders (price, quantity pairs)
+          items:
+            type: array
+            items:
+              type: string
+            minItems: 2
+            maxItems: 2
+          example:
+            - ["50100.00", "1.80000000"]
+            - ["50200.00", "0.50000000"]
+    
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "not_found"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Order not found"
+
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication (not currently implemented)
+
+externalDocs:
+  description: Full Documentation
+  url: https://github.com/yourusername/matching-engine
